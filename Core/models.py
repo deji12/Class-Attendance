@@ -7,6 +7,9 @@ class Faculty(models.Model):
     def __str__(self):
         return self.name
     
+    class Meta:
+        verbose_name_plural = "Faculties"
+    
 class Department(models.Model):
     name = models.CharField(max_length=100, help_text="The name of the department.")
     faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='departments', help_text="The faculty to which this department belongs.")
@@ -14,3 +17,6 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name_plural = "Departments"

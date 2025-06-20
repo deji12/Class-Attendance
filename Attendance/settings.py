@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Core',
     'User',
+    'Course'
 ]
 
 MIDDLEWARE = [
@@ -168,13 +169,12 @@ JAZZMIN_SETTINGS = {
 
         # {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
         {"app": "User"},
-
-
+        {"app": "Course"},
     ],
     "show_ui_builder": False,
 
     "copyright": "BIU Attendance System",
 
     "site_title": "BIU Attendance System",
-    # "site_header": "BIU Attendance System",
+    "site_header": "BIU Attendance System",
 }
