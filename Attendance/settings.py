@@ -178,3 +178,9 @@ JAZZMIN_SETTINGS = {
     "site_title": "BIU Attendance System",
     "site_header": "BIU Attendance System",
 }
+
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')

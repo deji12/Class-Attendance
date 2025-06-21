@@ -1,6 +1,10 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from Core.models import Faculty, Department
+import uuid
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.urls import reverse
 
 STUDENT_LEVELS = (
     ('100', '100'),
@@ -55,3 +59,28 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def send_password_reset_email(self, request, reset_id):
+        password_reset_url = reverse('reset_user_password', kwargs={'reset_id': reset_id})
+        full_password_reset_url = f'{request.scheme}://{request.get_host()}{password_reset_url}'
+        
+        email_body = f'Reset your password using the link below:\n\n\n{full_password_reset_url}'
+        
+        email_message = EmailMessage(
+            'Reset your password',
+            email_body,
+            settings.EMAIL_HOST_USER,
+            [self.email]
+        )
+        
+        email_message.fail_silently = True
+        email_message.send()
+
+    
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    reset_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
+    created_when = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f'Password reset for {self.user.username} at {self.created_when}'

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import User, PasswordResetCode
 from import_export.admin import ImportExportModelAdmin
 
 class UserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
@@ -11,3 +11,9 @@ class UserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_per_page = 30
 
 admin.site.register(User, UserAdmin)
+
+class PasswordResetCodeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = ['user', 'reset_id', 'created_when']
+    list_filter = ['created_when']
+
+admin.site.register(PasswordResetCode, PasswordResetCodeAdmin)
