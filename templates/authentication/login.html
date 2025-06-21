@@ -40,14 +40,14 @@
     <form method="POST">
       {% csrf_token %}
       <div class="mb-3 mt-3">
-        <label for="matric_number" class="form-label">Matric number:</label>
-        <input type="text" class="form-control" id="matric_number" placeholder="Enter matric number" name="matric_number">
+        <label for="matric_number" class="form-label">Matric number or email:</label>
+        <input type="text" class="form-control" id="matric_number_or_email" placeholder="Enter matric number or email" name="matric_number_or_email">
       </div>
       <div class="mb-3">
         <label for="pwd" class="form-label">Password:</label>
-        <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pswd">
+        <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="password">
       </div>
-      <p>Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+      <p>Don't have an account? <a href="{% url 'register_new_user' %}">Register</a></p>
       <p>Can't remember your password? <a href="#"> Reset password</a></p>
       <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
