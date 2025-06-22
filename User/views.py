@@ -149,7 +149,6 @@ def reset_password(request, reset_id):
 
                 password_reset_id.delete()
 
-
             # reset user password if no issues were found
             if not passwords_have_error:
                 user = password_reset_id.user
