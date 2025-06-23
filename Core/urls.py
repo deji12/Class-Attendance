@@ -1,9 +1,9 @@
 from .views import (
-    register_courses, registered_courses
+    available_courses, registered_courses
 )
 from django.urls import path
 
 urlpatterns = [
-    path('register-courses/', register_courses, name='register_courses'),
+    path('available-courses/', available_courses, name='available_courses'),
     path('registered-courses/', registered_courses, name='registered_courses'),
 ]

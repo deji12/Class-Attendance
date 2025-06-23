@@ -4,21 +4,7 @@
 
 <div class="container full-height d-flex flex-column justify-content-center align-items-center">
   
-  {% if messages %}
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="alert alert-success" role="alert" id="alert-message">
-          {{message}}
-        </div>
-      {% else %}
-        <div class="alert alert-danger" role="alert" id="alert-message">
-          {{message}}
-        </div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
-  <p class="h2">Register Courses</p>
+  <p class="h2">Available Courses</p>
   <div class="form-container">
     <form method="POST">
       {% csrf_token %}
@@ -29,7 +15,7 @@
                 <select class="form-control form-select" id="Level" name="level" style="min-width: 120px;">
                     <option value="" disabled selected>Select Level</option>
                     {% for level in levels %}
-                        <option value="{{level}}">{{level}}</option>
+                        <option {% if level_filter and level_filter == level %} selected {% endif %} value="{{level}}">{{level}}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -38,8 +24,9 @@
                 <label for="semester" class="form-label">Semester:</label>
                 <select class="form-control form-select" id="semester" name="semester" style="min-width: 120px;">
                     <option value="" disabled selected>Select Semester</option>
-                    <option value="First">First</option>
-                    <option value="Second">Second</option>
+                    {% for semester in semesters %}
+                        <option {% if semester_filter and semester_filter == semester %} selected {% endif %} value="{{semester}}">{{semester}}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -58,19 +45,12 @@
                 </tr>
             </thead>
             <tbody>
+              {% for course in courses %}
                 <tr>
-                <th scope="row">1</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                  <th scope="row">{{course.name}} ({{course.code}})</th>
+                  <td><button type="button" class="btn btn-primary">Register</button></td>
                 </tr>
-                <tr>
-                <th scope="row">2</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
-                </tr>
-                <tr>
-                <th scope="row">3</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
-                </tr>
-                
+              {% endfor %}
             </tbody>
         </table>
 
