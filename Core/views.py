@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from Course.models import Course
 from django.contrib import messages
+from django.http import JsonResponse
 
 @login_required
 def available_courses(request):
@@ -52,6 +53,33 @@ def available_courses(request):
     context['courses'] = get_courses_for_current_user
 
     return render(request, 'Core/available_courses.html', context)
+
+
+@login_required
+def register_course(request):
+
+    if request.method == 'POST':
+        course_id = request.POST.get('course_id')
+
+        user = request.user
+        course = Course.objects.get(id=course_id)
+
+        # Check if the course is already registered
+        if course in user.courses_taking.all():
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'You are already registered for this course.'
+            })
+        
+        user.courses_taking.add(course)
+        user.save()
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'You have successfully registered for {course.name}.'
+        })
+
+
 
 def registered_courses(request):
 

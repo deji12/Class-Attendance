@@ -1,5 +1,4 @@
 from django.db import models
-from User.models import User
 from Core.models import Department, Faculty
 
 STUDENT_LEVELS = (

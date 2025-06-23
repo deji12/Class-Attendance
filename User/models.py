@@ -5,6 +5,7 @@ import uuid
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
+from Course.models import Course
 
 STUDENT_LEVELS = (
     ('100', '100'),
@@ -44,7 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True, help_text="The department to which the student belongs.")    
     level = models.CharField(max_length=3, choices=STUDENT_LEVELS, default='100', help_text="The student's level of study.")
 
-    # courses_taking = models.ManyToManyField(Course, blank=True, help_text="Courses the student is currently enrolled in.")
+    courses_taking = models.ManyToManyField(Course, blank=True, help_text="Courses the student is currently enrolled in.")
 
     is_class_representative = models.BooleanField(default=False, help_text="Indicates whether the user is a class representative. Defaults to False.")
     is_staff =  models.BooleanField(default=False)

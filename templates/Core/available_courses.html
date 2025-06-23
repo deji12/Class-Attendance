@@ -35,8 +35,12 @@
             </div>
         </div>
     </form>
-    <div class="scrollable-table">
+    <center>
+        <p id="register-error-message" style="color:firebrick; display:none;"><b></b></p>
+        <p id="register-success-message" style="color:#155724; display:none;"><b></b></p>
+    </center>
 
+    <div class="scrollable-table">
         <table class="table"><table class="table table-bordered">
             <thead>
                 <tr>
@@ -45,12 +49,23 @@
                 </tr>
             </thead>
             <tbody>
-              {% for course in courses %}
-                <tr>
-                  <th scope="row">{{course.name}} ({{course.code}})</th>
-                  <td><button type="button" class="btn btn-primary">Register</button></td>
-                </tr>
-              {% endfor %}
+                {% for course in courses %}
+                    <tr>
+                        <th scope="row">{{ course.name }} ({{ course.code }})</th>
+                        <td>
+                            {% if course in request.user.courses_taking.all %}
+                                <button type="button" class="btn btn-secondary register-btn" disabled>
+                                Registered
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-primary register-btn" data-course-id="{{ course.id }}">
+                                Register
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+
             </tbody>
         </table>
 
@@ -64,5 +79,41 @@
         width: 100%;
     }
 </style>
+<script>
+  $(document).ready(function () {
+    $('.register-btn').click(function () {
+      const button = $(this); // store the clicked button
+      const courseId = button.data('course-id');
+
+      // Clear messages
+      $('#register-success-message').hide().text('');
+      $('#register-error-message').hide().text('');
+
+      $.ajax({
+        url: '{% url "register_course" %}',
+        method: 'POST',
+        data: {
+          course_id: courseId,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            $('#register-success-message').text(response.message).show();
+
+            // Disable and update the button
+            button.removeClass('btn-primary').addClass('btn-secondary')
+                  .text('Registered')
+                  .prop('disabled', true);
+          } else {
+            $('#register-error-message').text(response.message).show();
+          }
+        },
+        error: function () {
+          $('#register-error-message').text('An error occurred. Please try again.').show();
+        }
+      });
+    });
+  });
+</script>
 
 {% endblock content %}
