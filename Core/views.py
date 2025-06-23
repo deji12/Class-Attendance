@@ -4,6 +4,7 @@ from django.conf import settings
 from Course.models import Course
 from django.contrib import messages
 from django.http import JsonResponse
+from User.models import User
 
 @login_required
 def available_courses(request):
@@ -58,10 +59,11 @@ def available_courses(request):
 @login_required
 def register_course(request):
 
-    if request.method == 'POST':
+    user = request.user
+
+    if request.method == 'POST' and user.is_class_representative:
         course_id = request.POST.get('course_id')
 
-        user = request.user
         course = Course.objects.get(id=course_id)
 
         # Check if the course is already registered
@@ -79,8 +81,55 @@ def register_course(request):
             'message': f'You have successfully registered for {course.name}.'
         })
 
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
 
-
+@login_required
 def registered_courses(request):
 
-    return render(request, 'Core/registered_courses.html')
+    user = request.user
+
+    # if current user is a class representative, get courses for that user
+    
+    if user.is_class_representative:
+        courses = user.courses_taking.all()
+
+    # else, get courses from the class representative of the user's faculty and department
+    else:
+        class_representative = User.objects.get(
+            is_class_representative=True,
+            faculty=user.faculty,
+            department=user.department,
+            level=user.level
+        )
+        courses = class_representative.courses_taking.all()
+
+    context = {
+        'courses': courses,
+    }
+    return render(request, 'Core/registered_courses.html', context)  
+
+@login_required
+def unregister_course(request):
+
+    user = request.user
+
+    if request.method == 'POST' and user.is_class_representative:
+        course_id = request.POST.get('course_id')
+
+        course = Course.objects.get(id=course_id)
+
+        # Check if the course is registered
+        if course not in user.courses_taking.all():
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'You are not registered for this course.'
+            })
+        
+        user.courses_taking.remove(course)
+        user.save()
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'You have successfully unregistered from {course.name}.'
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})

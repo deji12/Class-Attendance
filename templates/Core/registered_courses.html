@@ -20,6 +20,11 @@
 
   <p class="h2">Registered Courses</p>
   <div class="form-container">
+
+    <center>
+        <p id="register-error-message" style="color:firebrick; display:none;"><b></b></p>
+        <p id="register-success-message" style="color:#155724; display:none;"><b></b></p>
+    </center>
     
     <div class="scrollable-table">
 
@@ -27,23 +32,25 @@
             <thead>
                 <tr>
                 <th scope="col">Course</th>
-                <th scope="col">Register</th>
+                <th scope="col">Status</th>
+                <th scope="col">Un-register</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                <th scope="row">1</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
+              {% for course in courses %}
+                <tr id="course-row-{{ course.id }}">
+                  <th scope="row">({{ course.code }}) {{ course.name }}</th>
+                  <td>
+                    <button type="button" class="btn btn-secondary" disabled>Registered</button>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-danger unregister-btn" data-course-id="{{ course.id }}">
+                      Remove
+                    </button>
+                  </td>
                 </tr>
-                <tr>
-                <th scope="row">2</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
-                </tr>
-                <tr>
-                <th scope="row">3</th>
-                <td><button type="button" class="btn btn-primary">Primary</button></td>
-                </tr>
-                
+              {% endfor %}
+
             </tbody>
         </table>
 
@@ -57,5 +64,40 @@
         width: 100%;
     }
 </style>
+<script>
+  $(document).ready(function () {
+    $('.unregister-btn').click(function () {
+      const button = $(this);
+      const courseId = button.data('course-id');
+
+      // Clear previous messages
+      $('#register-success-message').hide().text('');
+      $('#register-error-message').hide().text('');
+
+      $.ajax({
+        url: '{% url "unregister_course" %}',
+        method: 'POST',
+        data: {
+          course_id: courseId,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            $('#register-success-message').text(response.message).show();
+
+            // Remove the row from the table
+            $('#course-row-' + courseId).remove();
+          } else {
+            $('#register-error-message').text(response.message).show();
+          }
+        },
+        error: function () {
+          $('#register-error-message').text('An error occurred. Please try again.').show();
+        }
+      });
+    });
+  });
+</script>
+
 
 {% endblock content %}

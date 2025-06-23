@@ -51,7 +51,7 @@
             <tbody>
                 {% for course in courses %}
                     <tr>
-                        <th scope="row">{{ course.name }} ({{ course.code }})</th>
+                        <th scope="row">({{ course.code }}) {{ course.name }}</th>
                         <td>
                             {% if course in request.user.courses_taking.all %}
                                 <button type="button" class="btn btn-secondary register-btn" disabled>
