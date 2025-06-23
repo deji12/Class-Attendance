@@ -1,77 +1,61 @@
+{% extends "authentication/base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signup</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-  <style>
-    .form-container {
-      max-width: 500px;
-      width: 100%;
-    }
-    .full-height {
-      height: 100vh;
-    }
-  </style>
-</head>
-<body>
+{% block content %}
 
-<div class="container full-height d-flex flex-column justify-content-center align-items-center">
-  
-  {% if messages %}
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="alert alert-success" role="alert" id="alert-message">
-          {{message}}
+ <p class="h2">Register</p>
+    <div class="form-container scrollable">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3 mt-3">
+          <label for="username" class="form-label">E-mail:</label>
+          <input type="email" class="form-control" id="username" value="{{request.GET.email|default:""}}" placeholder="Enter email" name="email" required>
         </div>
-      {% else %}
-        <div class="alert alert-danger" role="alert" id="alert-message">
-          {{message}}
+        <div class="mb-3">
+          <label for="pwd" class="form-label">Password:</label>
+          <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="password" required>
         </div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+        <div class="mb-3 mt-3">
+          <label for="first_name" class="form-label">Full name:</label>
+          <input type="text" class="form-control" id="first_name" value="{{request.GET.full_name|default:""}}" placeholder="Enter your full name" name="full_name" required>
+        </div>
+        <div class="mb-3 mt-3">
+          <label for="matric_number" class="form-label">Matric Number:</label>
+          <input type="text" class="form-control" id="matric_number" minlength="6" value="{{request.GET.matric_number|default:""}}" placeholder="Enter matric number" name="matric_number" required>
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="Level" class="form-label">Level:</label>
+            <select class="form-control form-select" id="Level" name="level">
+              <option value="" disabled selected>Select Level</option>
+              {% for level in levels %}
+                  <option {% if level == request.GET.level %} selected {% endif %} value="{{level}}">{{level}}</option>
+              {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="faculty" class="form-label">Faculty:</label>
+            <select class="form-control form-select" id="faculty" name="faculty">
+              <option value="" disabled selected>Select Faculty</option>
+              {% for faculty in faculties %}
+                  <option {% if faculty.name == request.GET.faculty %} selected {% endif %} value="{{faculty.name}}">{{faculty.name}}</option>
+              {% endfor %}  
+            </select>
+        </div>
 
-  <p class="h2">Register</p>
-  <div class="form-container">
-    <form method="POST">
-      {% csrf_token %}
-      <div class="mb-3 mt-3">
-        <label for="username" class="form-label">E-mail:</label>
-        <input type="email" class="form-control" id="username" value="{{request.GET.email|default:""}}" placeholder="Enter email" name="email" required>
-      </div>
-      <div class="mb-3">
-        <label for="pwd" class="form-label">Password:</label>
-        <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="password" required>
-      </div>
-      <div class="mb-3 mt-3">
-        <label for="first_name" class="form-label">Full name:</label>
-        <input type="text" class="form-control" id="first_name" value="{{request.GET.full_name|default:""}}" placeholder="Enter your full name" name="full_name" required>
-      </div>
-      <div class="mb-3 mt-3">
-        <label for="matric_number" class="form-label">Matric Number:</label>
-        <input type="text" class="form-control" id="matric_number" minlength="6" value="{{request.GET.matric_number|default:""}}" placeholder="Enter matric number" name="matric_number" required>
-      </div>
-       <div class="mb-3 mt-3">
-        <label for="Level" class="form-label">Level:</label>
-        <select class="form-control" id="Level" name="level">
-          {% for level in levels %}
-            <option {% if level == request.GET.level %} selected {% endif %} value="{{level}}">{{level}}</option>
-          {% endfor %}
-        </select>
-      </div>
-      
-      <div class="form-check mb-3">
-        <p>Have an account? <a href="{% url 'login_user' %}">Login</a></p>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Register</button>
-    </form>
-  </div>
-</div>
+        <div class="mb-3 mt-3">
+            <label for="department" class="form-label">Department:</label>
+            <select class="form-control form-select" id="department" name="department">
+              <option value="" disabled selected>Select Department</option>
+              {% for department in departments %}
+                  <option {% if department.name == request.GET.department %} selected {% endif %} value="{{department.name}}">{{department.name}}</option>
+              {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-check mb-3">
+          <p>Have an account? <a href="{% url 'login_user' %}">Login</a></p>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
+    </div>  
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-</body>
-</html>
+{% endblock content %}

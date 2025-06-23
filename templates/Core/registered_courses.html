@@ -1,0 +1,61 @@
+{% extends "Core/base.html" %}
+
+{% block content %}
+
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+  
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+        <div class="alert alert-success" role="alert" id="alert-message">
+          {{message}}
+        </div>
+      {% else %}
+        <div class="alert alert-danger" role="alert" id="alert-message">
+          {{message}}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <p class="h2">Registered Courses</p>
+  <div class="form-container">
+    
+    <div class="scrollable-table">
+
+        <table class="table"><table class="table table-bordered">
+            <thead>
+                <tr>
+                <th scope="col">Course</th>
+                <th scope="col">Register</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <th scope="row">1</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                <tr>
+                <th scope="row">2</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                <tr>
+                <th scope="row">3</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+    </div>
+  </div>
+</div>
+<style>
+    .scrollable-table {
+        max-height: 500px; /* Set the maximum height for the scrollable area */
+        overflow-y: auto; /* Enable vertical scrolling */
+        width: 100%;
+    }
+</style>
+
+{% endblock content %}

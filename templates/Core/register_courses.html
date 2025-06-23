@@ -1,0 +1,88 @@
+{% extends "Core/base.html" %}
+
+{% block content %}
+
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+  
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+        <div class="alert alert-success" role="alert" id="alert-message">
+          {{message}}
+        </div>
+      {% else %}
+        <div class="alert alert-danger" role="alert" id="alert-message">
+          {{message}}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <p class="h2">Register Courses</p>
+  <div class="form-container">
+    <form method="POST">
+      {% csrf_token %}
+
+        <div class="mb-3 mt-3 row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="Level" class="form-label">Level:</label>
+                <select class="form-control form-select" id="Level" name="level" style="min-width: 120px;">
+                    <option value="" disabled selected>Select Level</option>
+                    {% for level in levels %}
+                        <option value="{{level}}">{{level}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <label for="semester" class="form-label">Semester:</label>
+                <select class="form-control form-select" id="semester" name="semester" style="min-width: 120px;">
+                    <option value="" disabled selected>Select Semester</option>
+                    <option value="First">First</option>
+                    <option value="Second">Second</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary mt-4" style="width%">Filter</button>
+            </div>
+        </div>
+    </form>
+    <div class="scrollable-table">
+
+        <table class="table"><table class="table table-bordered">
+            <thead>
+                <tr>
+                <th scope="col">Course</th>
+                <th scope="col">Register</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <th scope="row">1</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                <tr>
+                <th scope="row">2</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                <tr>
+                <th scope="row">3</th>
+                <td><button type="button" class="btn btn-primary">Primary</button></td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+    </div>
+  </div>
+</div>
+<style>
+    .scrollable-table {
+        max-height: 500px; /* Set the maximum height for the scrollable area */
+        overflow-y: auto; /* Enable vertical scrolling */
+        width: 100%;
+    }
+</style>
+
+{% endblock content %}

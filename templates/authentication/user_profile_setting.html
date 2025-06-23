@@ -1,0 +1,57 @@
+{% extends "Core/base.html" %}
+
+{% block content %}
+<div class="container full-height flex-column justify-content-center align-items-center" style="width: 90%;height:100vh">
+
+  <div class="form-container">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3 mt-3">
+            <label for="username" class="form-label">E-mail:</label>
+            <input type="email" class="form-control" id="username" value="{{request.user.email|default:""}}" placeholder="Enter email" name="email">
+        </div>
+        <div class="mb-3">
+            <label for="pwd" class="form-label">Password:</label>
+            <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="password">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="first_name" class="form-label">Full name:</label>
+            <input type="text" class="form-control" id="first_name" value="{{request.user.full_name|default:""}}" placeholder="Enter your full name" name="full_name">
+        </div>
+        <div class="mb-3 mt-3">
+            <label for="matric_number" class="form-label">Matric Number:</label>
+            <input type="text" class="form-control" id="matric_number" minlength="6" value="{{request.user.matric_number|default:""}}" placeholder="Enter matric number" name="matric_number">
+        </div>
+      
+        {% if request.user.is_class_representative %}
+            <div class="mb-3 mt-3">
+                <label for="Level" class="form-label">Level:</label>
+                <select class="form-control form-select" id="Level" name="level">
+                {% for level in levels %}
+                    <option {% if level == request.user.level %} selected {% endif %} value="{{level}}">{{level}}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3 mt-3">
+                <label for="faculty" class="form-label">Faculty:</label>
+                <select class="form-control form-select" id="faculty" name="faculty">
+                {% for faculty in faculties %}
+                    <option {% if faculty == request.user.faculty %} selected {% endif %} value="{{faculty}}">{{faculty}}</option>
+                {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3 mt-3">
+                <label for="department" class="form-label">Department:</label>
+                <select class="form-control form-select" id="department" name="department">
+                {% for department in departments %}
+                    <option {% if department == request.user.department %} selected {% endif %} value="{{department}}">{{department}}</option>
+                {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary w-100">Update Settings</button>
+    </form>
+  </div>
+</div>
+{% endblock content %}

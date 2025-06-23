@@ -6,6 +6,8 @@ from django.urls import reverse
 from .utils import is_valid_email, authenticate_user
 from django.contrib.auth import login, logout
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from Core.models import Faculty, Department
 
 def register_new_user(request):
 
@@ -17,8 +19,10 @@ def register_new_user(request):
         full_name = request.POST.get('full_name')
         matric_number = request.POST.get('matric_number')
         level = request.POST.get('level')
+        department = request.POST.get('department')
+        faculty = request.POST.get('faculty')
 
-        if not (email and password and full_name and matric_number and level):
+        if not (email and password and full_name and matric_number and level and department and faculty):
             messages.error(request, 'All fields must be filled')
             return redirect('register_new_user')
         
@@ -26,8 +30,9 @@ def register_new_user(request):
             messages.error(request, 'Invalid email provided')
             return redirect('register_new_user')
         
-        register_url_with_post_data_as_query_params = f"{reverse('register_new_user')}?email={email}&full_name={full_name}&matric_number={matric_number}&level={level}"   
+        register_url_with_post_data_as_query_params = f"{reverse('register_new_user')}?email={email}&full_name={full_name}&matric_number={matric_number}&level={level}&department={department}&faculty={faculty}"   
 
+        # check if user already exists
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Email already in use')
             return redirect(register_url_with_post_data_as_query_params)
@@ -39,21 +44,34 @@ def register_new_user(request):
         if len(password) < 5:
             messages.error(request, 'Password must not be at least 5 characters')
             return redirect(register_url_with_post_data_as_query_params)
+
         
-        # create user in database
+        if not Faculty.objects.filter(name=faculty).exists():
+            messages.error(request, 'Invalid faculty provided')
+            return redirect(register_url_with_post_data_as_query_params)
+        
+        if not Department.objects.filter(name=department).exists():
+            messages.error(request, 'Invalid department provided')
+            return redirect(register_url_with_post_data_as_query_params)
+        
+        # create user
         User.objects.create_user(
             email=email,
             password=password,
             full_name=full_name,
             matric_number=matric_number,
-            level=level
+            level=level,
+            department=Department.objects.get(name=department),
+            faculty=Faculty.objects.get(name=faculty)
         )
 
         messages.success(request, 'Account created successfully, login')
-        return redirect('login_user')
+        return redirect('login')
 
     context = {
-        'levels': settings.STUDENT_LEVELS
+        'levels': settings.STUDENT_LEVELS,
+        'faculties': Faculty.objects.all(),
+        'departments': Department.objects.all(),
     }
     return render(request, 'authentication/register.html', context)
 
@@ -70,12 +88,16 @@ def login_user(request):
             return redirect('login_user')
         
         # authenticate login creds
+
+        #login with email
         if '@' in matric_number_or_email:
             user = authenticate_user(
                 value=matric_number_or_email,
                 password=password,
                 type='email'
             )
+
+        # login with matric number
         elif '/' in matric_number_or_email:
             user = authenticate_user(
                 value=matric_number_or_email,
@@ -85,7 +107,7 @@ def login_user(request):
 
         if user is not None:
             login(request, user)
-            # return redirect('home')
+            return redirect('user_profile_settings')
         else:
             messages.error(request, 'Invalid login credentials provided')
             return redirect('login_user')
@@ -167,3 +189,77 @@ def reset_password(request, reset_id):
         return redirect('forgot_password')
 
     return render(request, 'authentication/reset_password.html')
+
+@login_required
+def user_profile_setting(request):
+
+    if request.method == 'POST':
+
+        # get form data
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        full_name = request.POST.get('full_name')
+        matric_number = request.POST.get('matric_number')
+
+        level = request.POST.get('level')
+        # department = request.POST.get('department')
+        # faculty = request.POST.get('faculty')
+
+        user_data_updated = False
+        user = request.user
+        
+        # validate data
+        if not is_valid_email(email):
+            messages.error(request, 'Invalid email provided')
+            return redirect('user_profile_settings')  
+
+        if email and User.objects.filter(email=email).exclude(id=user.id).exists():
+            messages.error(request, 'Email already in use')
+            return redirect('user_profile_settings')
+        
+        if  matric_number and User.objects.filter(matric_number=matric_number).exclude(id=user.id).exists():
+            messages.error(request, 'Matric number already in use')
+            return redirect('user_profile_settings')
+        
+        if password and len(password) < 5:
+            messages.error(request, 'Password must not be at least 5 characters')
+            return redirect('user_profile_settings')
+
+        if password:
+            if not user.check_password(password):
+                user.set_password(password)
+
+        if email and email != user.email:
+            user.email = email
+            
+        if full_name and full_name != user.full_name:
+            user.full_name = full_name
+
+        if matric_number and matric_number != user.matric_number:
+            user.matric_number = matric_number
+
+        if level and user.level != level:
+            user.level = level
+            user_data_updated = True
+
+        # if department and department != user.department:
+        #     user.department = Department.objects.get(name=department)
+        #     user_data_updated = True
+
+        # if faculty and faculty != user.faculty:
+        #     user.faculty = Faculty.objects.get(name=faculty)
+        #     user_data_updated = True
+
+        # only save user object if an update has been made
+        if user_data_updated:
+            user.save()
+            messages.success(request, 'Settings updated successfully')
+
+        return redirect('user_profile_settings')
+
+    context = {
+        'levels': settings.STUDENT_LEVELS,
+        'faculties': Faculty.objects.all(),
+        'departments': Department.objects.all(),
+    }
+    return render(request, 'authentication/user_profile_setting.html', context)
