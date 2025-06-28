@@ -3,20 +3,6 @@
 {% block content %}
 
 <div class="container full-height d-flex flex-column justify-content-center align-items-center">
-  
-  {% if messages %}
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="alert alert-success" role="alert" id="alert-message">
-          {{message}}
-        </div>
-      {% else %}
-        <div class="alert alert-danger" role="alert" id="alert-message">
-          {{message}}
-        </div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
 
   <p class="h2">Registered Courses</p>
   <div class="form-container">
@@ -28,75 +14,233 @@
     
     <div class="scrollable-table">
 
-        <table class="table"><table class="table table-bordered">
-            <thead>
-                <tr>
-                <th scope="col">Course</th>
-                <th scope="col">Status</th>
-                <th scope="col">Un-register</th>
-                </tr>
-            </thead>
-            <tbody>
-              {% for course in courses %}
-                <tr id="course-row-{{ course.id }}">
-                  <th scope="row">({{ course.code }}) {{ course.name }}</th>
-                  <td>
-                    <button type="button" class="btn btn-secondary" disabled>Registered</button>
-                  </td>
-                  <td>
-                    <button type="button" class="btn btn-danger unregister-btn" data-course-id="{{ course.id }}">
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              {% endfor %}
+        {% if request.user.is_class_representative %}
+          <table class="table table-bordered">
+              <thead>
+                  <tr>
+                  <th scope="col">Course</th>
+                  <th scope="col">Un-register</th>
+                  <th scope="col">Attendance</th>
+                  </tr>
+              </thead>
+              <tbody>
+                {% for course in courses %}
+                  <tr id="course-row-{{ course.id }}">
+                    <th scope="row">({{ course.code }}) {{ course.name }}</th>
+                    
+                    <td>
+                      <button type="button" class="btn btn-danger unregister-btn" data-course-id="{{ course.id }}">
+                        Remove
+                      </button>
+                    </td>
+                    
+                    {% if course.has_active_attendance_session %}
+                      <td>
+                        <button type="button" class="btn btn-success" disabled>Active</button>
+                      </td>
+                    {% else %}
+                      <td>
+                        <button type="button"
+                                class="btn btn-primary open-initiate-modal"
+                                data-course-id="{{ course.id }}"
+                                data-course-name="{{ course.name }}"
+                                data-course-code="{{ course.code }}"
+                                data-action-url="{% url 'create_new_attendance_session' course.id %}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#initiateAttendanceModal">
+                          Initiate
+                        </button>
+                      </td>
+                    {% endif %}
+                  </tr>
+                  
+                {% endfor %}
 
-            </tbody>
-        </table>
+              </tbody>
+          </table>
 
+          <div class="modal fade" id="initiateAttendanceModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="POST" id="attendance-form">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Initiate Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+
+                  <div class="modal-body">
+                    {% csrf_token %}
+                    <p>Initiate attendance for <b id="courseName"></b></p>
+
+                    <div class="mb-3 mt-3">
+                      <label for="duration" class="form-label">Duration (minutes):</label>
+                      <select class="form-control form-select" required id="duration" name="duration">
+                        <option value="" disabled selected>Select duration</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                      </select>
+
+                      <input type="hidden" name="latitude" id="latitude">
+                      <input type="hidden" name="longitude" id="longitude">
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        {% else %}
+          <table class="table"><table class="table table-bordered">
+              <thead>
+                  <tr>
+                  <th scope="col">Course</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Attendance</th>
+                  </tr>
+              </thead>
+              <tbody>
+                {% for course in courses %}
+                  <tr id="course-row-{{ course.id }}">
+                    <th scope="row">({{ course.code }}) {{ course.name }}</th>
+                    <td>
+                      <button type="button" class="btn btn-secondary" disabled>Registered</button>
+                    </td>
+                    {% if course.has_active_attendance_session %}
+                    <td>
+                      <button type="button"
+                              class="btn btn-success sign-button"
+                              data-course-name="{{ course.name }}"
+                              data-course-id="{{ course.id }}"
+                              data-course-code="{{ course.code }}"
+                              data-action-url="{% url 'sign_attendance' course.get_last_attendance_session_id %}">
+                        Sign
+                      </button>
+                    </td>
+                  {% else %}
+                    <td>
+                      <button type="button" class="btn btn-primary" disabled>Sign</button>
+                    </td>
+                  {% endif %}
+                  </tr>
+                {% endfor %}
+                <form method="POST" id="shared-sign-form" style="display: none;">
+                  {% csrf_token %}
+                  <input type="hidden" name="latitude" id="latitude">
+                  <input type="hidden" name="longitude" id="longitude">
+                </form>
+              </tbody>
+          </table>  
+        {% endif %}
     </div>
   </div>
 </div>
+
 <style>
     .scrollable-table {
-        max-height: 500px; /* Set the maximum height for the scrollable area */
+        max-height: 80vh; /* Set the maximum height for the scrollable area */
         overflow-y: auto; /* Enable vertical scrolling */
         width: 100%;
     }
 </style>
 <script>
   $(document).ready(function () {
-    $('.unregister-btn').click(function () {
-      const button = $(this);
-      const courseId = button.data('course-id');
 
-      // Clear previous messages
-      $('#register-success-message').hide().text('');
-      $('#register-error-message').hide().text('');
+    // Set location once when the page loads
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+     
+      $('#latitude').val(position.coords.latitude);
+      $('#longitude').val(position.coords.longitude);
+      
+      {% if request.user.is_class_representative %}
+        alert("You can now initiate attendance for your courses.");
+      {% else %}
+        alert("You can now sign attendance for your courses.");
+      {% endif %}
+    }, function () {
+      alert("Location access is required to initiate attendance.");
+    });
+  }
 
-      $.ajax({
-        url: '{% url "unregister_course" %}',
-        method: 'POST',
-        data: {
-          course_id: courseId,
-          csrfmiddlewaretoken: '{{ csrf_token }}'
-        },
-        success: function (response) {
-          if (response.status === 'success') {
-            $('#register-success-message').text(response.message).show();
+    $('.open-initiate-modal').on('click', function () {
+      const courseId = $(this).data('course-id');
+      const courseName = $(this).data('course-name');
+      const courseCode = $(this).data('course-code');
+      const actionUrl = $(this).data('action-url');
 
-            // Remove the row from the table
-            $('#course-row-' + courseId).remove();
-          } else {
-            $('#register-error-message').text(response.message).show();
-          }
-        },
-        error: function () {
-          $('#register-error-message').text('An error occurred. Please try again.').show();
+      // Update modal content
+      $('#modalTitle').text(`Initiate ${courseCode} Attendance`);
+      $('#courseName').text(courseName);
+      $('#attendance-form').attr('action', actionUrl);
+  });
+
+  // Handle "Sign" button clicks
+  $('.sign-button').on('click', function () {
+    const actionUrl = $(this).data('action-url');
+
+    const latitude = $('#latitude').val();
+    const longitude = $('#longitude').val();
+
+    if (!latitude || !longitude) {
+      alert("Please wait… Your location is still being determined. Try again in a few seconds.");
+      return; // Stop the submission
+    }
+
+    $('#shared-sign-form').attr('action', actionUrl);
+    $('#shared-sign-form').submit();
+  });
+
+  $('#attendance-form').on('submit', function (e) {
+    const latitude = $('#latitude').val();
+    const longitude = $('#longitude').val();
+
+    if (!latitude || !longitude) {
+      e.preventDefault(); // Explicitly prevent form submission
+      alert("Please wait… Your location is still being determined. Try again in a few seconds.");
+    }
+  });
+
+   
+
+  $('.unregister-btn').click(function () {
+    const button = $(this);
+    const courseId = button.data('course-id');
+
+    // Clear previous messages
+    $('#register-success-message').hide().text('');
+    $('#register-error-message').hide().text('');
+
+    $.ajax({
+      url: '{% url "unregister_course" %}',
+      method: 'POST',
+      data: {
+        course_id: courseId,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+      },
+      success: function (response) {
+        if (response.status === 'success') {
+          $('#register-success-message').text(response.message).show();
+
+          // Remove the row from the table
+          $('#course-row-' + courseId).remove();
+        } else {
+          $('#register-error-message').text(response.message).show();
         }
-      });
+      },
+      error: function () {
+        $('#register-error-message').text('An error occurred. Please try again.').show();
+      }
     });
   });
+});
+
 </script>
 
 

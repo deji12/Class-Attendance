@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Core',
     'User',
-    'Course'
+    'Course',
+    'AttendanceApp',
 ]
 
 MIDDLEWARE = [
@@ -171,6 +172,7 @@ JAZZMIN_SETTINGS = {
         # {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
         {"app": "User"},
         {"app": "Course"},
+        {"app": "AttendanceApp"},
     ],
     "show_ui_builder": False,
 

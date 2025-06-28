@@ -66,7 +66,7 @@ def register_new_user(request):
         )
 
         messages.success(request, 'Account created successfully, login')
-        return redirect('login')
+        return redirect('login_user')
 
     context = {
         'levels': settings.STUDENT_LEVELS,
@@ -107,7 +107,7 @@ def login_user(request):
 
         if user is not None:
             login(request, user)
-            return redirect('user_profile_settings')
+            return redirect('home_page')
         else:
             messages.error(request, 'Invalid login credentials provided')
             return redirect('login_user')

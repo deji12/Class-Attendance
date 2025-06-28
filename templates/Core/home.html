@@ -1,0 +1,21 @@
+{% extends "Core/base.html" %}
+
+{% block content %}
+
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+    <p class="h2">Hello, {{request.user.full_name}}</p>
+    <div class="d-flex gap-2">
+    {% if request.user.is_class_representative %}
+        <button type="button" onclick="window.location.href = {% url 'registered_courses' %}" class="btn btn-primary">Initiate Attendance</button>
+    {% else %}
+        <button type="button" onclick="window.location.href = {% url 'registered_courses' %}" class="btn btn-primary">Sign Attendance</button>
+    {% endif %}
+</div>
+</div>
+<style>
+    
+    .full-height {
+      height: 100vh;
+    }
+  </style>
+{% endblock content %}

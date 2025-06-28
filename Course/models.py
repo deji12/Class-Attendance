@@ -1,5 +1,7 @@
 from django.db import models
 from Core.models import Department, Faculty
+from django.utils import timezone
+from datetime import timedelta
 
 STUDENT_LEVELS = (
     ('100', '100'),
@@ -25,3 +27,31 @@ class Course(models.Model):
     number_of_initiated_attendances = models.IntegerField(default=0, help_text="The number of initiated attendances for this course.")
     def __str__(self):
         return f"{self.name} ({self.code})"
+    
+    def has_active_attendance_session(self):
+
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+
+        session = self.attendance_sessions.filter(
+            timestamp__range=(today_start, today_end)
+        ).first()
+
+        if session:
+            expiration_time = session.timestamp + timedelta(minutes=session.duration)
+            return now <= expiration_time
+        
+        return False
+    
+    def get_last_attendance_session_id(self):
+
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+
+        session = self.attendance_sessions.filter(
+            timestamp__range=(today_start, today_end)
+        ).first()
+
+        return session.id

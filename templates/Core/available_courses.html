@@ -45,24 +45,28 @@
             <thead>
                 <tr>
                 <th scope="col">Course</th>
-                <th scope="col">Register</th>
+                {% if request.user.is_class_representative %}
+                    <th scope="col">Register</th>
+                {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for course in courses %}
                     <tr>
                         <th scope="row">({{ course.code }}) {{ course.name }}</th>
-                        <td>
-                            {% if course in request.user.courses_taking.all %}
-                                <button type="button" class="btn btn-secondary register-btn" disabled>
-                                Registered
-                                </button>
-                            {% else %}
-                                <button type="button" class="btn btn-primary register-btn" data-course-id="{{ course.id }}">
-                                Register
-                                </button>
-                            {% endif %}
-                        </td>
+                        {% if request.user.is_class_representative %}
+                            <td>
+                                {% if course in request.user.courses_taking.all %}
+                                    <button type="button" class="btn btn-secondary register-btn" disabled>
+                                    Registered
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn btn-primary register-btn" data-course-id="{{ course.id }}">
+                                    Register
+                                    </button>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
 

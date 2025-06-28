@@ -11,32 +11,35 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="#">{{request.user}}</a>
+            <a class="navbar-brand" href="{% url 'home_page' %}">{{request.user}}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        <a class="nav-link active" aria-current="page" href="{% url 'home_page' %}">Home</a>
                     </li>
-                    {% if request.user.is_class_representative %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Courses
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{% url 'available_courses' %}">Register Course</a></li>
+                            <li><a class="dropdown-item" href="{% url 'available_courses' %}">
+                              {% if request.user.is_class_representative %}
+                                Register Course
+                              {% else %}
+                                Available Courses
+                              {% endif %}
+                            </a></li>
                             <li><a class="dropdown-item" href="{% url 'registered_courses' %}">Registered Courses</a></li>
                         </ul>
                     </li>
-                    {% else %}
-                      <li class="nav-item">
-                          <a class="nav-link" aria-current="page" href="{% url 'registered_courses' %}">Registered Courses</a>
-                      </li>
-                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="{% url 'user_profile_settings' %}">Setting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">FAQ</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout_user' %}">Logout</a>

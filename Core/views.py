@@ -7,6 +7,11 @@ from django.http import JsonResponse
 from User.models import User
 
 @login_required
+def home_page(request):
+
+    return render(request, 'Core/home.html')
+
+@login_required
 def available_courses(request):
 
     user = request.user
