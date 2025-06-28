@@ -7,13 +7,12 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from .utils import get_user_ip, verify_user_location, haversine_distance
+from User.models import User
 
 @class_representative_required
 def create_attendance_session(request, course_id):
 
     if request.method == 'POST':
-
-        print(request.POST)
 
         duration = request.POST.get('duration')
         longitude = request.POST.get('longitude')
@@ -106,8 +105,7 @@ def sign_attendance(request, attendance_id):
                 return redirect('registered_courses')
             
             # get the user's IP address
-            # user_ip = get_user_ip(request)
-            user_ip = "102.89.46.22"
+            user_ip = get_user_ip(request)
             
             # Check if a user has already signed in from this IP address
             if AttendanceRecord.objects.filter(session=attendance, ip_address=user_ip):
@@ -132,3 +130,32 @@ def sign_attendance(request, attendance_id):
         except AttendanceSession.DoesNotExist:
             messages.error(request, 'Attendance session does not exist')
             return redirect('registered_courses')
+        
+# views.py
+@class_representative_required
+def attendance_summary_view(request, course_id):
+
+    user = request.user
+
+    course = Course.objects.get(id=course_id)
+    sessions = AttendanceSession.objects.filter(course=course).order_by('timestamp')
+    students = User.objects.filter(faculty=user.faculty, department=user.department, level=user.level).prefetch_related('attendance_records')
+
+    attendance_data = []
+    for student in students:
+        records = {r.session_id for r in student.attendance_records.all()}
+        percentage = round((len(records)/sessions.count() * 100), 2) if sessions.exists() else 0
+        attendance_data.append({
+            'student': student,
+            'sessions_present': records,
+            'percentage': percentage
+        })
+
+    print(attendance_data)
+
+    context = {
+        'course': course,
+        'sessions': sessions,
+        'attendance_data': attendance_data,
+    }
+    return render(request, 'attendance/attendance_summary.html', context)

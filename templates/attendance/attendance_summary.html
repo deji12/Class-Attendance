@@ -1,0 +1,43 @@
+{% extends 'Core/base.html' %}
+
+{% block content %}
+{% load custom_filters %}
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+<h3>Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Student</th>
+      {% for session in sessions %}
+        <th>Session {{ forloop.counter }}</th>
+      {% endfor %}
+      <th>Attendance %</th>
+    </tr>
+  </thead>
+<!-- Template -->
+<tbody>
+  {% for data in attendance_data %}
+    <tr>
+      <td>{{ data.student.full_name }}</td>
+      {% for session in sessions %}
+        <td>
+            {% if session.id in data.sessions_present %}
+                ✅
+            {% else %}
+                ❌
+            {% endif %}
+        </td>
+      {% endfor %}
+      <td {% if data.percentage < 70 %}class="text-danger fw-bold"{% endif %}>
+        {{ data.percentage }}%
+      </td>
+    </tr>
+  {% endfor %}
+</tbody>
+  </tbody>
+</table>
+
+</div>
+
+{% endblock content %}

@@ -26,7 +26,7 @@
               <tbody>
                 {% for course in courses %}
                   <tr id="course-row-{{ course.id }}">
-                    <th scope="row">({{ course.code }}) {{ course.name }}</th>
+                    <th scope="row"><a href="{% url 'attendance_summary' course.id %}">({{ course.code }}) </a>{{ course.name }}</th>
                     
                     <td>
                       <button type="button" class="btn btn-danger unregister-btn" data-course-id="{{ course.id }}">
@@ -152,33 +152,56 @@
 <script>
   $(document).ready(function () {
 
-    // Set location once when the page loads
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (position) {
-     
-      $('#latitude').val(position.coords.latitude);
-      $('#longitude').val(position.coords.longitude);
-      
-      {% if request.user.is_class_representative %}
-        alert("You can now initiate attendance for your courses.");
-      {% else %}
-        alert("You can now sign attendance for your courses.");
-      {% endif %}
-    }, function () {
-      alert("Location access is required to initiate attendance.");
-    });
+  // Check if location is already stored
+    const storedLatitude = sessionStorage.getItem('latitude');
+    const storedLongitude = sessionStorage.getItem('longitude');
+
+    if (storedLatitude && storedLongitude) {
+    // Use the stored location values
+    $('#latitude').val(storedLatitude);
+    $('#longitude').val(storedLongitude);
+    console.log("Location loaded from session storage.");
+  } else {
+    // Ask for location and store it in session storage
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        // Save to session storage
+        sessionStorage.setItem('latitude', latitude);
+        sessionStorage.setItem('longitude', longitude);
+
+        // Set values in the hidden input fields
+        $('#latitude').val(latitude);
+        $('#longitude').val(longitude);
+
+        // Show alert
+        {% if request.user.is_class_representative %}
+          alert("You can now initiate attendance for your courses.");
+        {% else %}
+          alert("You can now sign attendance for your courses.");
+        {% endif %}
+
+        console.log("Location saved to session storage.");
+      }, function () {
+        alert("Location access is required to initiate attendance.");
+      });
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
   }
 
-    $('.open-initiate-modal').on('click', function () {
-      const courseId = $(this).data('course-id');
-      const courseName = $(this).data('course-name');
-      const courseCode = $(this).data('course-code');
-      const actionUrl = $(this).data('action-url');
+  $('.open-initiate-modal').on('click', function () {
+    const courseId = $(this).data('course-id');
+    const courseName = $(this).data('course-name');
+    const courseCode = $(this).data('course-code');
+    const actionUrl = $(this).data('action-url');
 
-      // Update modal content
-      $('#modalTitle').text(`Initiate ${courseCode} Attendance`);
-      $('#courseName').text(courseName);
-      $('#attendance-form').attr('action', actionUrl);
+    // Update modal content
+    $('#modalTitle').text(`Initiate ${courseCode} Attendance`);
+    $('#courseName').text(courseName);
+    $('#attendance-form').attr('action', actionUrl);
   });
 
   // Handle "Sign" button clicks

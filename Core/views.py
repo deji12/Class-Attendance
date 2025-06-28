@@ -5,6 +5,8 @@ from Course.models import Course
 from django.contrib import messages
 from django.http import JsonResponse
 from User.models import User
+from User.decorators import class_representative_required
+from AttendanceApp.models import AttendanceSession
 
 @login_required
 def home_page(request):
@@ -61,7 +63,7 @@ def available_courses(request):
     return render(request, 'Core/available_courses.html', context)
 
 
-@login_required
+@class_representative_required
 def register_course(request):
 
     user = request.user
@@ -113,12 +115,12 @@ def registered_courses(request):
     }
     return render(request, 'Core/registered_courses.html', context)  
 
-@login_required
+@class_representative_required
 def unregister_course(request):
 
     user = request.user
 
-    if request.method == 'POST' and user.is_class_representative:
+    if request.method == 'POST':
         course_id = request.POST.get('course_id')
 
         course = Course.objects.get(id=course_id)
@@ -132,9 +134,17 @@ def unregister_course(request):
         
         user.courses_taking.remove(course)
         user.save()
+
+        # delete all attendance records
+        AttendanceSession.objects.filter(course=course, initiated_by=user).delete()
+
         return JsonResponse({
             'status': 'success', 
             'message': f'You have successfully unregistered from {course.name}.'
         })
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+def faq(request):
+
+    return render(request, 'Core/faq.html')
