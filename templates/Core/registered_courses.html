@@ -15,7 +15,7 @@
     <div class="scrollable-table">
 
         {% if request.user.is_class_representative %}
-          <table class="table table-bordered">
+          <table class="table table-bordered table-striped table-hover">
               <thead>
                   <tr>
                   <th scope="col">Course</th>
@@ -97,7 +97,7 @@
           </div>
 
         {% else %}
-          <table class="table"><table class="table table-bordered">
+          <table class="table"><table class="table table-bordered table-striped table-hover">
               <thead>
                   <tr>
                   <th scope="col">Course</th>

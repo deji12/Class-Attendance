@@ -1,43 +1,94 @@
 {% extends 'Core/base.html' %}
 
 {% block content %}
-{% load custom_filters %}
 <div class="container full-height d-flex flex-column justify-content-center align-items-center">
-<h3>Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
+  <h3 class="text-center mb-4">Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
 
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th>Student</th>
-      {% for session in sessions %}
-        <th>Session {{ forloop.counter }}</th>
-      {% endfor %}
-      <th>Attendance %</th>
-    </tr>
-  </thead>
-<!-- Template -->
-<tbody>
-  {% for data in attendance_data %}
-    <tr>
-      <td>{{ data.student.full_name }}</td>
-      {% for session in sessions %}
-        <td>
-            {% if session.id in data.sessions_present %}
-                ✅
-            {% else %}
-                ❌
-            {% endif %}
-        </td>
-      {% endfor %}
-      <td {% if data.percentage < 70 %}class="text-danger fw-bold"{% endif %}>
-        {{ data.percentage }}%
-      </td>
-    </tr>
-  {% endfor %}
-</tbody>
-  </tbody>
-</table>
+  <!-- Download Button -->
+  <div class="mb-3 align-self-end">
+    <button onclick="exportToExcel()" class="btn btn-success">
+      <i class="fas fa-download me-2"></i>Download as Excel
+    </button>
+  </div>
 
+  <!-- Responsive Table Container -->
+  <div class="table-responsive-lg" style="max-height: 70vh; overflow: auto; width: 100%;">
+
+    <table class="table table-bordered table-striped table-hover">
+      <thead class="thead-dark sticky-top">
+        <tr>
+          <th class="sticky-col">Matric Number</th>
+          <th class="sticky-col" style="left: 120px;">Name</th>
+          {% for session in sessions %}
+            <th>{{ session.timestamp|date:"M j, Y" }}</th>
+          {% endfor %}
+          <th class="bg-light">Attendance %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for data in attendance_data %}
+          <tr>
+            <td class="sticky-col">{{ data.student.matric_number }}</td>
+            <td class="sticky-col" style="left: 120px;">{{ data.student.full_name }}</td>
+            {% for session in sessions %}
+              <td class="text-center">
+                {% if session.id in data.sessions_present %}
+                  <span class="text-success">✅</span>
+                {% else %}
+                  <span class="text-danger">❌</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+            <td class="text-center fw-bold {% if data.percentage < 70 %}text-danger{% else %}text-success{% endif %}">
+              {{ data.percentage }}%
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
+<style>
+
+  /* Header sticky */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background-color: #f8f9fa;
+  }
+
+  /* Table wrapper scroll */
+  .table-responsive-lg {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    overflow: auto;
+    max-height: 70vh;
+    width: 100%;
+  }
+
+  /* Ensure table fills width */
+  table {
+    width: max-content;
+    min-width: 100%;
+    margin-bottom: 0 !important;
+  }
+
+  th, td {
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+</style>
+
+<script>
+function exportToExcel() {
+  const table = document.querySelector('.table');
+  const html = table.outerHTML;
+  const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'attendance_{{course.code}}_{{course.name}}.xls';
+  a.click();
+}
+</script>
 {% endblock content %}

@@ -8,6 +8,7 @@ from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from .utils import get_user_ip, verify_user_location, haversine_distance
 from User.models import User
+from django.db import models
 
 @class_representative_required
 def create_attendance_session(request, course_id):
@@ -53,8 +54,7 @@ def create_attendance_session(request, course_id):
             )
             attendance.save()
 
-            # user_ip = get_user_ip(request)
-            user_ip = "102.89.46.22"
+            user_ip = get_user_ip(request)
 
             # Create attendance record
             AttendanceRecord.objects.create(
@@ -105,7 +105,8 @@ def sign_attendance(request, attendance_id):
                 return redirect('registered_courses')
             
             # get the user's IP address
-            user_ip = get_user_ip(request)
+            # user_ip = get_user_ip(request)
+            user_ip = "102.89.46.22"
             
             # Check if a user has already signed in from this IP address
             if AttendanceRecord.objects.filter(session=attendance, ip_address=user_ip):
@@ -134,24 +135,36 @@ def sign_attendance(request, attendance_id):
 # views.py
 @class_representative_required
 def attendance_summary_view(request, course_id):
-
     user = request.user
-
     course = Course.objects.get(id=course_id)
+    
+    # Get sessions only for this course
     sessions = AttendanceSession.objects.filter(course=course).order_by('timestamp')
-    students = User.objects.filter(faculty=user.faculty, department=user.department, level=user.level).prefetch_related('attendance_records')
+    
+    # Get students in the same faculty/department/level
+    students = User.objects.filter(
+        faculty=user.faculty, 
+        department=user.department, 
+        level=user.level
+    ).prefetch_related(
+        models.Prefetch(
+            'attendance_records',
+            queryset=AttendanceRecord.objects.filter(session__course=course),
+            to_attr='course_attendance_records'
+        )
+    )
 
     attendance_data = []
     for student in students:
-        records = {r.session_id for r in student.attendance_records.all()}
+        # Only count records for this course's sessions
+        records = {r.session_id for r in student.course_attendance_records}
         percentage = round((len(records)/sessions.count() * 100), 2) if sessions.exists() else 0
+        
         attendance_data.append({
             'student': student,
             'sessions_present': records,
             'percentage': percentage
         })
-
-    print(attendance_data)
 
     context = {
         'course': course,
