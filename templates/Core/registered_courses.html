@@ -156,7 +156,7 @@
     const storedLatitude = sessionStorage.getItem('latitude');
     const storedLongitude = sessionStorage.getItem('longitude');
 
-    if (storedLatitude && storedLongitude) {
+  if (storedLatitude && storedLongitude) {
     // Use the stored location values
     $('#latitude').val(storedLatitude);
     $('#longitude').val(storedLongitude);
@@ -168,9 +168,13 @@
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
 
-        // Save to session storage
-        sessionStorage.setItem('latitude', latitude);
-        sessionStorage.setItem('longitude', longitude);
+
+        {% if request.user.is_class_representative %}
+          /* Save to session storage only for class representative to make sure students can continually try
+           to sign with a new location rather than fixed one */
+          sessionStorage.setItem('latitude', latitude);
+          sessionStorage.setItem('longitude', longitude);
+        {% endif %}
 
         // Set values in the hidden input fields
         $('#latitude').val(latitude);
