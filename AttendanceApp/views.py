@@ -105,8 +105,7 @@ def sign_attendance(request, attendance_id):
                 return redirect('registered_courses')
             
             # get the user's IP address
-            # user_ip = get_user_ip(request)
-            user_ip = "102.89.46.22"
+            user_ip = get_user_ip(request)
             
             # Check if a user has already signed in from this IP address
             if AttendanceRecord.objects.filter(session=attendance, ip_address=user_ip):
