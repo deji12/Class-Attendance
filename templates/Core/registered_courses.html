@@ -6,7 +6,6 @@
 
   <p class="h2">Registered Courses</p>
   <div class="form-container">
-
     <center>
         <p id="register-error-message" style="color:firebrick; display:none;"><b></b></p>
         <p id="register-success-message" style="color:#155724; display:none;"><b></b></p>
@@ -97,7 +96,7 @@
           </div>
 
         {% else %}
-          <table class="table"><table class="table table-bordered table-striped table-hover">
+          <table class="table table-bordered table-striped table-hover">
               <thead>
                   <tr>
                   <th scope="col">Course</th>
@@ -130,17 +129,18 @@
                   {% endif %}
                   </tr>
                 {% endfor %}
-                <form method="POST" id="shared-sign-form" style="display: none;">
-                  {% csrf_token %}
-                  <input type="hidden" name="latitude" id="latitude">
-                  <input type="hidden" name="longitude" id="longitude">
-                </form>
               </tbody>
           </table>  
         {% endif %}
     </div>
   </div>
 </div>
+
+<form method="POST" id="shared-sign-form">
+    {% csrf_token %}
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+</form>
 
 <style>
     .scrollable-table {
@@ -149,6 +149,7 @@
         width: 100%;
     }
 </style>
+
 <script>
   $(document).ready(function () {
 
@@ -160,18 +161,25 @@
     // Use the stored location values
     $('#latitude').val(storedLatitude);
     $('#longitude').val(storedLongitude);
-    console.log("Location loaded from session storage.");
+
   } else {
     // Ask for location and store it in session storage
     if (navigator.geolocation) {
+
+      const formContainer = document.querySelector('.form-container');
+      const locationLoadinngBtn = `
+        <button class="btn btn-success location-loading" type="button"  style="width: 100%;margin-bottom:15px;">
+            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+            Getting location...
+        </button>
+        `
+      formContainer.innerHTML = locationLoadinngBtn + formContainer.innerHTML;
+
       navigator.geolocation.getCurrentPosition(function (position) {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
 
-
         {% if request.user.is_class_representative %}
-          /* Save to session storage only for class representative to make sure students can continually try
-           to sign with a new location rather than fixed one */
           sessionStorage.setItem('latitude', latitude);
           sessionStorage.setItem('longitude', longitude);
         {% endif %}
@@ -182,8 +190,10 @@
 
         // Show alert
         {% if request.user.is_class_representative %}
+          document.querySelector('.location-loading').remove();
           alert("You can now initiate attendance for your courses.");
         {% else %}
+          document.querySelector('.location-loading').remove();
           alert("You can now sign attendance for your courses.");
         {% endif %}
 
@@ -219,6 +229,11 @@
       alert("Please wait… Your location is still being determined. Try again in a few seconds.");
       return; // Stop the submission
     }
+
+    console.log(latitude)
+    console.log(longitude)
+
+    //return
 
     $('#shared-sign-form').attr('action', actionUrl);
     $('#shared-sign-form').submit();

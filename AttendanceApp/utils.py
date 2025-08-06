@@ -1,5 +1,4 @@
 import requests
-import json
 import math
 
 def haversine_distance(lat1, lon1, lat2, lon2):
@@ -23,13 +22,13 @@ def get_user_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-def verify_user_location(ip):
+def is_user_in_nigeria(ip_address):
 
-    request = requests.get(f'http://ip-api.com/json/{ip}')
-    location_data = json.loads(request.text)
-
-    print(location_data)
+    try:
+        response = requests.get(f'http://ip-api.com/json/{ip_address}', timeout=5)
+        data = response.json()
+        
+        return data.get('country') == 'Nigeria'
     
-    if location_data.get('country') == 'Nigeria':
-        return True
-    return False
+    except requests.RequestException:
+        return False

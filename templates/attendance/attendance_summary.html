@@ -4,11 +4,23 @@
 <div class="container full-height d-flex flex-column justify-content-center align-items-center">
   <h3 class="text-center mb-4">Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
 
+  {% if course.has_active_attendance_session %}
+    <button class="btn btn-success location-loading" type="button" disabled style="width: 100%;margin-bottom:15px;">
+              <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+              Attendance in Progress...
+    </button>
+  {% endif %}
+
   <!-- Download Button -->
-  <div class="mb-3 align-self-end">
+  <div class="mb-3 align-self-end"> 
     <button onclick="exportToExcel()" class="btn btn-success">
       <i class="fas fa-download me-2"></i>Download as Excel
     </button>
+    {% if course.has_active_attendance_session %}
+      <button class="btn btn-primary update-location" type="button">
+        Update Location
+      </button>
+    {% endif %}
   </div>
 
   <!-- Responsive Table Container -->
@@ -90,5 +102,50 @@ function exportToExcel() {
   a.download = 'attendance_{{course.code}}_{{course.name}}.xls';
   a.click();
 }
+
+{% if course.has_active_attendance_session %}
+
+let latitude;
+let longitude;
+
+function getLongitudeAndLatitude() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      latitude = position.coords.latitude;
+      longitude = position.coords.longitude;
+    })
+  }
+}
+
+getLongitudeAndLatitude()
+
+document.querySelector('.update-location').addEventListener('click', () => {
+  
+  const sessionId = '{{ course.get_last_attendance_session_id }}';
+  const url = `/update-attendance-location/${sessionId}/`;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+      sessionId: sessionId,
+      latitude: latitude,
+      longitude: longitude
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    window.location.reload();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    //alert("An error occurred while updating the location.");
+  });
+})
+
+{% endif %}
 </script>
 {% endblock content %}

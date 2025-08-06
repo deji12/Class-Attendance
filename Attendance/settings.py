@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'User',
     'Course',
     'AttendanceApp',
+    'django_user_agents',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
 ]
 
 ROOT_URLCONF = 'Attendance.urls'
@@ -189,3 +191,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 LOGIN_URL = 'login_user'
+
+MAX_DISTANCE_KM = config('MAX_DISTANCE_KM', cast=float, default=0.05)
+
+DEFAULT_IP_ADDRESS = config('DEFAULT_IP_ADDRESS', default='')

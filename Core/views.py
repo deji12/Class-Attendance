@@ -11,6 +11,8 @@ from AttendanceApp.models import AttendanceSession
 @login_required
 def home_page(request):
 
+    print(request.user_agent)
+
     return render(request, 'Core/home.html')
 
 @login_required

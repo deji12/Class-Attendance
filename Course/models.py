@@ -44,7 +44,7 @@ class Course(models.Model):
         
         return False
     
-    def get_last_attendance_session_id(self):
+    def last_attendance_session(self):
 
         now = timezone.now()
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -54,4 +54,7 @@ class Course(models.Model):
             timestamp__range=(today_start, today_end)
         ).first()
 
-        return session.id
+        return session
+    
+    def get_last_attendance_session_id(self):
+        return self.last_attendance_session().id
