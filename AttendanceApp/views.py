@@ -29,6 +29,11 @@ def create_attendance_session(request, course_id):
             messages.error(request, 'You must select a valid duration for this attendance session')
             return redirect('registered_courses')
         
+        # make sure the user is on a mobile device
+        if request.user_agent.is_bot or request.user_agent.is_pc:
+            messages.error(request, "Attendance must be created using a mobile device using a mobile device.")
+            return redirect('registered_courses')
+        
         if not (longitude and latitude):
             messages.error(request, 'You must provide your current location to initiate an attendance session')
             return redirect('registered_courses')
@@ -212,8 +217,6 @@ def update_attendance_location(request, session_id):
     session.initiator_latitude = lat
     session.initiator_longitude = lon
     session.save()
-
-    print("Updated session location:", session.initiator_latitude, session.initiator_longitude)
 
     messages.success(request, "Attendance location updated successfully.")
     # return redirect('attendance_summary', course_id=session.course.id)
