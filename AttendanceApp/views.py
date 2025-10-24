@@ -88,6 +88,13 @@ def sign_attendance(request, attendance_id):
         messages.error(request, "Attendance can only be signed in using a mobile device.")
         return redirect('registered_courses')
     
+    attendance = AttendanceSession.objects.get(id=attendance_id)
+    
+    # Check if already signed in
+    if AttendanceRecord.objects.filter(session=attendance, student=request.user).exists():
+        messages.error(request, "You have already signed in for this attendance session.")
+        return redirect('registered_courses')
+    
     if request.method != 'POST':
         messages.error(request, "Invalid request method.")
         return redirect('registered_courses')
@@ -101,8 +108,6 @@ def sign_attendance(request, attendance_id):
         return redirect('registered_courses')
     
     MAX_DISTANCE_KM = settings.MAX_DISTANCE_KM
-
-    attendance = AttendanceSession.objects.get(id=attendance_id)
 
     # Check if location is set
     if attendance.initiator_latitude is None or attendance.initiator_longitude is None:
@@ -122,11 +127,6 @@ def sign_attendance(request, attendance_id):
     # Ensure session is still active
     if not attendance.course.has_active_attendance_session():
         messages.error(request, "No active attendance session for this course.")
-        return redirect('registered_courses')
-
-    # Check if already signed in
-    if AttendanceRecord.objects.filter(session=attendance, student=request.user).exists():
-        messages.error(request, "You have already signed in for this attendance session.")
         return redirect('registered_courses')
     
     if settings.DEBUG:
@@ -193,7 +193,14 @@ def attendance_summary_view(request, course_id):
     }
     return render(request, 'attendance/attendance_summary.html', context)
 
+@class_representative_required
 def update_attendance_location(request, session_id):
+
+    # make sure the user is on a mobile device
+    if request.user_agent.is_bot or request.user_agent.is_pc:
+        messages.error(request, "Location update must be performed from a mobile device.")
+        return redirect('registered_courses')
+    
     if request.method != 'POST':
         return redirect('attendance_summary', course_id=session_id)
     
