@@ -192,6 +192,6 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 LOGIN_URL = 'login_user'
 
-MAX_DISTANCE_KM = config('MAX_DISTANCE_KM', cast=float, default=0.05)
+MAX_DISTANCE_KM = config('MAX_DISTANCE_KM', cast=float, default=0.5)
 
 DEFAULT_IP_ADDRESS = config('DEFAULT_IP_ADDRESS', default='')
