@@ -24,35 +24,41 @@ def create_attendance_session(request, course_id):
         longitude = request.POST.get('longitude')
         latitude = request.POST.get('latitude')
 
+        instant_attendance = request.POST.get('instant_attendance')
+        instant_attendance_title = request.POST.get('instant_attendance_title')
+
+        previous_url = request.META['HTTP_REFERER']
 
         if not (duration and duration.isalnum()):
             messages.error(request, 'You must select a valid duration for this attendance session')
-            return redirect('registered_courses')
+            return redirect(previous_url)
         
         # make sure the user is on a mobile device
-        if request.user_agent.is_bot or request.user_agent.is_pc:
-            messages.error(request, "Attendance must be created using a mobile device using a mobile device.")
-            return redirect('registered_courses')
+        # if request.user_agent.is_bot or request.user_agent.is_pc:
+        #     messages.error(request, "Attendance must be created using a mobile device.")
+        #     return redirect(previous_url)
         
         if not (longitude and latitude):
             messages.error(request, 'You must provide your current location to initiate an attendance session')
-            return redirect('registered_courses')
+            return redirect(previous_url)
         
         course = Course.objects.get(id=course_id)
 
-        # Check if attendance already exists for today
-        now = timezone.now()
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
+        # instant attendance can be created regardless of whether an attendance has been taken already
+        if instant_attendance != 'True':
+            # Check if attendance already exists for today
+            now = timezone.now()
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1)
 
-        already_exists = AttendanceSession.objects.filter(
-            course=course,
-            timestamp__range=(today_start, today_end)
-        ).exists()
+            already_exists = AttendanceSession.objects.filter(
+                course=course,
+                timestamp__range=(today_start, today_end)
+            ).exists()
 
-        if already_exists:
-            messages.error(request, f'An attendance session has already been created for {course.code} today.')
-            return redirect('registered_courses')
+            if already_exists:
+                messages.error(request, f'An attendance session has already been created for {course.code} today.')
+                return redirect(previous_url)
         
         try:
             attendance = AttendanceSession(
@@ -62,6 +68,11 @@ def create_attendance_session(request, course_id):
                 initiator_latitude=latitude,
                 initiator_longitude=longitude
             )
+
+            if instant_attendance == 'True':
+                attendance.is_instant_attendance = True
+                attendance.instant_attendance_title = instant_attendance_title if instant_attendance_title else ''
+
             attendance.save()
 
             user_ip = get_user_ip(request)
@@ -78,7 +89,7 @@ def create_attendance_session(request, course_id):
 
         except Course.DoesNotExist:
             messages.error(request, 'Invalid course')
-            return redirect('registered_courses')
+            return redirect(previous_url)
 
 @login_required
 def sign_attendance(request, attendance_id):
@@ -159,7 +170,7 @@ def attendance_summary_view(request, course_id):
     course = Course.objects.get(id=course_id)
     
     # Get sessions only for this course
-    sessions = AttendanceSession.objects.filter(course=course).order_by('timestamp')
+    sessions = AttendanceSession.objects.filter(course=course, is_instant_attendance=False).order_by('timestamp')
     
     # Get students in the same faculty/department/level
     students = User.objects.filter(
@@ -169,7 +180,7 @@ def attendance_summary_view(request, course_id):
     ).prefetch_related(
         models.Prefetch(
             'attendance_records',
-            queryset=AttendanceRecord.objects.filter(session__course=course),
+            queryset=AttendanceRecord.objects.filter(session__course=course, session__is_instant_attendance=False),
             to_attr='course_attendance_records'
         )
     )
@@ -225,7 +236,39 @@ def update_attendance_location(request, session_id):
     session.initiator_longitude = lon
     session.save()
 
-    messages.success(request, "Attendance location updated successfully.")
+    # messages.success(request, "Attendance location updated successfully.")
     # return redirect('attendance_summary', course_id=session.course.id)
 
     return JsonResponse(status=200, data={})
+
+@class_representative_required
+def instant_attendance_history(request, course_id):
+
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    
+    # Get sessions only for this course
+    sessions = AttendanceSession.objects.filter(course=course, is_instant_attendance=True).order_by('-timestamp')
+
+    context = {
+        'sessions': sessions
+    }
+    return render(request, 'attendance/instant_attendance_summary.html', context)
+
+@class_representative_required
+def instant_attendance_detail(request, session_id):
+
+    try:
+        session = AttendanceSession.objects.get(id=session_id)
+    except AttendanceSession.DoesNotExist:
+        messages.error(request, "Invalid attendance session.")
+        return redirect('attendance_summary', course_id=session_id)
+    
+    attendance_records = AttendanceRecord.objects.filter(session=session)
+    context = {
+        'records': attendance_records,
+        'session': session,
+        'course': session.course
+    }
+
+    return render(request, 'attendance/instant_attendsnce_list_detail.html', context)

@@ -153,16 +153,6 @@
 <script>
   $(document).ready(function () {
 
-  // Check if location is already stored
-    const storedLatitude = sessionStorage.getItem('latitude');
-    const storedLongitude = sessionStorage.getItem('longitude');
-
-  if (storedLatitude && storedLongitude) {
-    // Use the stored location values
-    $('#latitude').val(storedLatitude);
-    $('#longitude').val(storedLongitude);
-
-  } else {
     // Ask for location and store it in session storage
     if (navigator.geolocation) {
 
@@ -178,11 +168,6 @@
       navigator.geolocation.getCurrentPosition(function (position) {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-
-        {% if request.user.is_class_representative %}
-          sessionStorage.setItem('latitude', latitude);
-          sessionStorage.setItem('longitude', longitude);
-        {% endif %}
 
         // Set values in the hidden input fields
         $('#latitude').val(latitude);
@@ -204,7 +189,7 @@
     } else {
       alert("Geolocation is not supported by your browser.");
     }
-  }
+  
 
   $('.open-initiate-modal').on('click', function () {
     const courseId = $(this).data('course-id');

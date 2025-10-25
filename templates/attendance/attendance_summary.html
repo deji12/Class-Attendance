@@ -4,18 +4,80 @@
 <div class="container full-height d-flex flex-column justify-content-center align-items-center">
   <h3 class="text-center mb-4">Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
 
-  {% if course.has_active_attendance_session %}
+  {% if course.has_active_attendance_session  %}
     <button class="btn btn-success location-loading" type="button" disabled style="width: 100%;margin-bottom:15px;">
               <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
               Attendance in Progress...
     </button>
   {% endif %}
+    <div class="form-container"></div>
+
+  <div class="modal fade" id="initiateAttendanceModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" id="attendance-form" action="{% url 'create_new_attendance_session' course.id %}">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Initiate Attendance</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            {% csrf_token %}
+            <p>Initiate attendance for <b id="courseName"></b></p>
+
+            <div class="mb-3 mt-3">
+
+              <label for="instant_attendance_title" class="form-label">Attendance title</label>
+              <input class="form-control" id="instant_attendance_title" placeholder="Attendance title (optional)" name="instant_attendance_title">
+              
+              <input type="hidden" name="instant_attendance" value="True" id="instant_attendance">
+
+              <br>
+              <label for="duration" class="form-label">Duration (minutes):</label>
+              <select class="form-control form-select" required id="duration" name="duration">
+                <option value="" disabled selected>Select duration</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+              </select>
+
+              <input type="hidden" name="latitude" id="latitude">
+              <input type="hidden" name="longitude" id="longitude">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Download Button -->
   <div class="mb-3 align-self-end"> 
     <button onclick="exportToExcel()" class="btn btn-success">
-      <i class="fas fa-download me-2"></i>Download as Excel
+      <i class="fas fa-download me-2"></i>Download Excel
     </button>
+    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="margin: 5px">
+          Instant Attendance
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ loop.index }}">            
+        <li><a class="dropdown-item" href="{% url 'instant_attendance_history' course.id %}">History</a></li>
+        {% if not course.has_active_attendance_session %}
+          <li><a class="dropdown-item open-initiate-modal" 
+            data-course-id="{{ course.id }}"
+            data-course-name="{{ course.name }}"
+            data-course-code="{{ course.code }}"
+            data-action-url="{% url 'create_new_attendance_session' course.id %}"
+            data-bs-toggle="modal"
+            data-bs-target="#initiateAttendanceModal"
+            href="#">Initiate attendance</a>
+          </li>
+        {% endif %}
+    </ul>
     {% if course.has_active_attendance_session %}
       <button class="btn btn-primary update-location" type="button">
         Update Location
@@ -93,59 +155,109 @@
 </style>
 
 <script>
-function exportToExcel() {
-  const table = document.querySelector('.table');
-  const html = table.outerHTML;
-  const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'attendance_{{course.code}}_{{course.name}}.xls';
-  a.click();
-}
+  function exportToExcel() {
+    const table = document.querySelector('.table');
+    const html = table.outerHTML;
+    const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'attendance_{{course.code}}_{{course.name}}.xls';
+    a.click();
+  }
+
+  // Handle modal popup
+  $('.open-initiate-modal').on('click', function () {
+    const courseId = $(this).data('course-id');
+    const courseName = $(this).data('course-name');
+    const courseCode = $(this).data('course-code');
+    const actionUrl = $(this).data('action-url');
+
+    // Update modal content
+    $('#modalTitle').text(`Initiate ${courseCode} Attendance`);
+    $('#courseName').text(courseName);
+    $('#attendance-form').attr('action', actionUrl);
+  });
+    
 
 {% if course.has_active_attendance_session %}
 
-let latitude;
-let longitude;
+  let latitude;
+  let longitude;
 
-function getLongitudeAndLatitude() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (position) {
-      latitude = position.coords.latitude;
-      longitude = position.coords.longitude;
-    })
+  function getLongitudeAndLatitude() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      })
+    }
   }
-}
 
-getLongitudeAndLatitude()
+  getLongitudeAndLatitude()
 
-document.querySelector('.update-location').addEventListener('click', () => {
-  
-  const sessionId = '{{ course.get_last_attendance_session_id }}';
-  const url = `/update-attendance-location/${sessionId}/`;
+  document.querySelector('.update-location').addEventListener('click', () => {
+    
+    const sessionId = '{{ course.get_last_attendance_session_id }}';
+    const url = `/update-attendance-location/${sessionId}/`;
 
-  fetch(url, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ 
-      sessionId: sessionId,
-      latitude: latitude,
-      longitude: longitude
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        sessionId: sessionId,
+        latitude: latitude,
+        longitude: longitude
+      })
     })
+    .then(response => response.json())
+    .then(data => {
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      //alert("An error occurred while updating the location.");
+    });
   })
-  .then(response => response.json())
-  .then(data => {
-    window.location.reload();
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    //alert("An error occurred while updating the location.");
-  });
-})
+
+{% else %}
+
+// Ask for location and store it in session storage
+  if (navigator.geolocation) {
+
+    const formContainer = document.querySelector('.form-container');
+    const locationLoadinngBtn = `
+      <button class="btn btn-success location-loading" type="button"  style="width: 100%;margin-bottom:15px;">
+          <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+          Getting location...
+      </button>
+      `
+    formContainer.innerHTML = locationLoadinngBtn + formContainer.innerHTML;
+
+    navigator.geolocation.getCurrentPosition(function (position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      // Set values in the hidden input fields
+      $('#latitude').val(latitude);
+      $('#longitude').val(longitude);
+
+      // Show alert
+      document.querySelector('.location-loading').remove();
+      alert("You can now initiate attendance for your courses.");
+
+
+      console.log("Location saved to session storage.");
+    }, function () {
+      alert("Location access is required to initiate attendance.");
+    });
+  } else {
+    alert("Geolocation is not supported by your browser.");
+  }
 
 {% endif %}
+
 </script>
 {% endblock content %}

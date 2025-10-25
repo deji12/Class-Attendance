@@ -1,0 +1,88 @@
+{% extends 'Core/base.html' %}
+
+{% block content %}
+<br>
+<div class="container full-height d-flex flex-column justify-content-center align-items-center">
+  <h3 class="text-center mb-4">Attendance Summary for {{ course.name }} ({{ course.code }})</h3>
+
+  {% if session.is_active  %}
+    <button class="btn btn-success location-loading" type="button" disabled style="width: 100%;margin-bottom:15px;">
+              <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+              Attendance in Progress...
+    </button>
+  {% endif %}
+    <div class="form-container"></div>
+
+  <!-- Download Button -->
+  <div class="mb-3 align-self-end"> 
+    <button onclick="exportToExcel()" class="btn btn-success">
+      <i class="fas fa-download me-2"></i>Download Excel
+    </button>
+  </div>
+
+  <!-- Responsive Table Container -->
+  <div class="table-responsive-lg" style="max-height: 70vh; overflow: auto; width: 100%;">
+
+    <table class="table table-bordered table-striped table-hover">
+      <thead class="thead-dark sticky-top">
+        <tr>
+          <th class="sticky-col">Matric Number</th>
+          <th class="sticky-col" style="left: 120px;">Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for data in records %}
+          <tr>
+            <td class="sticky-col">{{ data.student.matric_number }}</td>
+            <td class="sticky-col" style="left: 120px;">{{ data.student.full_name }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+
+  /* Header sticky */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background-color: #f8f9fa;
+  }
+
+  /* Table wrapper scroll */
+  .table-responsive-lg {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    overflow: auto;
+    max-height: 70vh;
+    width: 100%;
+  }
+
+  /* Ensure table fills width */
+  table {
+    width: max-content;
+    min-width: 100%;
+    margin-bottom: 0 !important;
+  }
+
+  th, td {
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+</style>
+
+<script>
+  function exportToExcel() {
+    const table = document.querySelector('.table');
+    const html = table.outerHTML;
+    const blob = new Blob([html], {type: 'application/vnd.ms-excel'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'instant_attendance_{{course.code}}_{{course.name}}.xls';
+    a.click();
+  }
+
+</script>
+{% endblock content %}

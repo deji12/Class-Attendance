@@ -12,8 +12,8 @@ admin.site.register(AttendanceRecord, AttendanceRecordAdmin)
 
 class AttendanceSessionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
-    list_display = ['course__name', 'initiated_by', 'timestamp', 'duration']
-    search_fields = ['course__code', 'initiated_by__username']
-    list_filter = ['course', 'initiated_by', 'timestamp']
+    list_display = ['course__name', 'initiated_by', 'is_instant_attendance', 'timestamp', 'duration']
+    search_fields = ['course__code', 'instant_attendance_title', 'initiated_by__username']
+    list_filter = ['is_instant_attendance', 'course', 'initiated_by', 'timestamp']
 
 admin.site.register(AttendanceSession, AttendanceSessionAdmin)

@@ -36,12 +36,11 @@ class Course(models.Model):
 
         session = self.attendance_sessions.filter(
             timestamp__range=(today_start, today_end)
-        ).first()
+        ).order_by('-timestamp').first()
 
         if session:
             expiration_time = session.timestamp + timedelta(minutes=session.duration)
             return now <= expiration_time
-        
         return False
     
     def last_attendance_session(self):
