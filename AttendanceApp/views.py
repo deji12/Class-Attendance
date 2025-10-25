@@ -34,9 +34,9 @@ def create_attendance_session(request, course_id):
             return redirect(previous_url)
         
         # make sure the user is on a mobile device
-        # if request.user_agent.is_bot or request.user_agent.is_pc:
-        #     messages.error(request, "Attendance must be created using a mobile device.")
-        #     return redirect(previous_url)
+        if request.user_agent.is_bot or request.user_agent.is_pc:
+            messages.error(request, "Attendance must be created using a mobile device.")
+            return redirect(previous_url)
         
         if not (longitude and latitude):
             messages.error(request, 'You must provide your current location to initiate an attendance session')
@@ -244,7 +244,6 @@ def update_attendance_location(request, session_id):
 @class_representative_required
 def instant_attendance_history(request, course_id):
 
-    user = request.user
     course = Course.objects.get(id=course_id)
     
     # Get sessions only for this course
